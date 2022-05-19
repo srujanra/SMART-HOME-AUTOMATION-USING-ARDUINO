@@ -1,0 +1,202 @@
+ Voice Enhanced Home Automation
+
+
+String s;
+int Lawn_Light=A0;
+int Lawn_Lights=9;
+void setup() {
+ pinMode(2,OUTPUT);
+  pinMode(3,OUTPUT);
+  Serial.begin(9600);
+  pinMode(Lawn_Light,INPUT);
+  // digitalWrite(3,HIGH);
+  //digitalWrite(2,HIGH);
+}
+void Fan_switch(String s){
+   if(s.equalsIgnoreCase("Jarvis AC on")){
+    Serial.println("Yes Boss, switching Fan on");
+    digitalWrite(2,LOW);
+  }
+  else if(s.equalsIgnoreCase("Jarvis AC off")){
+    Serial.println("Yes Boss, switching Fan off");
+    digitalWrite(2,HIGH);
+  }
+}
+
+void Light_switch(String s){
+  if(s.equalsIgnoreCase("Jarvis Light on")){
+    Serial.println("Yes Boss, switching Lights on");
+   digitalWrite(3,LOW);
+  }
+  else if(s.equalsIgnoreCase("Jarvis Light off")){
+    Serial.println("Yes Boss, switching Lights off");
+   digitalWrite(3,HIGH);
+  }
+  
+}
+void Lawn_Light_Control(){
+  int s=(255./1023.)*analogRead(Lawn_Light);
+  Serial.println(s);
+  analogWrite(Lawn_Lights,255-s);
+  delay(1000);
+}
+
+void loop() {
+  
+  Lawn_Light_Control();
+  s=Serial.readString();
+  Fan_switch(s);
+  Light_switch(s);
+  Serial.println(s);
+
+}
+
+
+
+
+#######################################################################################################################################################################
+
+ Hmidity 
+
+
+
+#include <DHT.h>
+#define Type DHT11
+int sensePin=2;
+DHT HT(sensePin,Type);
+float humidty;
+float tempC;
+float tempF;
+
+int val;
+int fanPin=9;
+
+//Gas Sensor
+int gas_sensor=A3;
+int INDICATOR=A4;
+void setup() {
+   pinMode(fanPin,OUTPUT);
+  HT.begin();
+  delay(500);
+  
+  pinMode(INDICATOR, OUTPUT);
+  pinMode(gas_sensor, INPUT);
+   Serial.begin(9600);
+}
+void Gas_sensor()
+{
+  val=analogRead(gas_sensor);
+    if(val>105){
+    digitalWrite(INDICATOR, HIGH);
+  }
+  else
+  digitalWrite(INDICATOR, LOW);
+  Serial.println(analogRead(gas_sensor));
+}
+void loop() {
+  // put your main code here, to run repeatedly:
+
+  humidty=HT.readHumidity();
+  tempC=HT.readTemperature();
+  tempF=HT.readTemperature(true);
+
+  Serial.print("Humidty: ");
+  Serial.print(humidty);
+  Serial.print(" TempC: ");
+  Serial.print(tempC);
+  Serial.print("C TempF: ");
+  Serial.print(tempF);
+  Serial.println("F ");
+  if(humidty>=80){
+    digitalWrite(fanPin,LOW);
+    delay(2000);
+  }
+  else{
+    digitalWrite(fanPin,HIGH);
+  }
+  Gas_sensor();
+  delay(1000);
+}
+
+
+
+##########################################################################################################################################################################
+
+
+ Door Sensor and Hallway lights
+#include <Servo.h>
+
+Servo myservo;
+               
+int pirPin = 2;                 
+int pirStat = 0;
+int pos = 0;
+int ultra_trig=7;
+int ultra_echo=8;
+int RED_passage=9;
+int GREEN_passage=10;
+int WHITE_passage=13;
+int PIR_sense=1;
+Servo myServo;
+int duration;
+float cm;
+
+void setup() {
+   pinMode(pirPin, INPUT);
+   myservo.attach(3);  
+   Serial.begin(9600);
+   pinMode(ultra_echo, INPUT);
+   pinMode(ultra_trig, OUTPUT);
+   pinMode(RED_passage, OUTPUT);
+   pinMode(GREEN_passage, OUTPUT);
+   pinMode(WHITE_passage, OUTPUT);
+Serial.begin(9600);
+}
+void Door(){
+  pirStat = digitalRead(pirPin); 
+ if (pirStat == HIGH) {            
+   Serial.println("OPENING THE DOOR");
+    for (pos = 90; pos >= 0; pos -= 1) { 
+    myservo.write(pos);              
+    delay(15);                       
+   }
+   delay(1000);
+   for (pos = 0; pos <= 110; pos += 1) { 
+    myservo.write(pos);              
+    delay(15);                       
+   } 
+ } 
+ else {
+ }
+}
+void Passage_Light(){
+   digitalWrite(ultra_trig,HIGH);
+   delayMicroseconds(10);
+   digitalWrite(ultra_trig,LOW);
+   duration=pulseIn(ultra_echo,HIGH);
+   cm=duration*0.034/2;
+  Serial.println(cm);
+  if(cm>35){
+    digitalWrite(RED_passage,HIGH);
+     digitalWrite(GREEN_passage,LOW);
+    digitalWrite(WHITE_passage,LOW);
+  }
+  else if(cm>10){
+    digitalWrite(GREEN_passage,HIGH);
+    digitalWrite(RED_passage,LOW);
+    digitalWrite(WHITE_passage,LOW);
+  }
+  else{
+    digitalWrite(WHITE_passage,HIGH);
+    digitalWrite(GREEN_passage,LOW);
+    digitalWrite(RED_passage,LOW);
+  }
+  //lcd.print(cm);
+  delay(500);
+}
+
+void loop() {
+  Door();
+  Passage_Light();
+ 
+}
